@@ -6,10 +6,17 @@ require('dotenv').config();
 const Service = require('../models/Service');
 const HaircutStyle = require('../models/HaircutStyle');
 const DailyLimit = require('../models/DailyLimit');
+const AdminUser = require('../models/AdminUser');
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/queueMe');
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/queueMe', {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      bufferMaxEntries: 0, // Disable mongoose buffering
+      bufferCommands: false, // Disable mongoose buffering
+    });
     console.log('MongoDB Connected for seeding...');
   } catch (error) {
     console.error('Database connection error:', error);
@@ -143,11 +150,52 @@ const seedDailyLimit = async () => {
   }
 };
 
+const seedAdminUsers = async () => {
+  try {
+    // Check if admin user already exists
+    const existingAdmin = await AdminUser.findOne({ username: process.env.ADMIN_USERNAME || 'admin' });
+    
+    if (existingAdmin) {
+      console.log('✅ Admin user already exists');
+      console.log(`   Username: ${existingAdmin.username}`);
+      console.log(`   Email: ${existingAdmin.email}`);
+      console.log(`   Role: ${existingAdmin.role}`);
+      return existingAdmin;
+    }
+
+    // Hash the default password
+    const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'password123', 10);
+
+    // Create default admin user
+    const adminUser = new AdminUser({
+      username: process.env.ADMIN_USERNAME || 'admin',
+      email: process.env.ADMIN_EMAIL || 'admin@queueme.com',
+      password: hashedPassword,
+      role: 'admin',
+      isActive: true
+    });
+
+    await adminUser.save();
+    console.log('✅ Created admin user');
+    console.log(`   Username: ${adminUser.username}`);
+    console.log(`   Email: ${adminUser.email}`);
+    console.log(`   Role: ${adminUser.role}`);
+    return adminUser;
+  } catch (error) {
+    console.error('Error seeding admin users:', error);
+    throw error;
+  }
+};
+
 const seedData = async () => {
   try {
     await connectDB();
     
     console.log('🌱 Starting database seeding...\n');
+    
+    // Seed admin users first
+    await seedAdminUsers();
+    console.log('');
     
     // Seed services
     await seedServices();
@@ -163,10 +211,14 @@ const seedData = async () => {
     
     console.log('🎉 Database seeding completed successfully!');
     console.log('\n📋 Summary:');
+    console.log('- Admin Users: Created default admin account');
     console.log('- Services: Created default barbershop services');
     console.log('- Haircut Styles: Created trending styles with images');
     console.log('- Daily Limit: Set up today\'s customer limit');
     console.log('\n🚀 You can now start the application!');
+    console.log('\n🔐 Admin Login Credentials:');
+    console.log(`   Username: ${process.env.ADMIN_USERNAME || 'admin'}`);
+    console.log(`   Password: ${process.env.ADMIN_PASSWORD || 'password123'}`);
     
   } catch (error) {
     console.error('❌ Seeding failed:', error);
@@ -182,4 +234,4 @@ if (require.main === module) {
   seedData();
 }
 
-module.exports = { seedData, seedServices, seedHaircutStyles, seedDailyLimit };
+module.exports = { seedData, seedServices, seedHaircutStyles, seedDailyLimit, seedAdminUsers };

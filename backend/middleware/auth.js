@@ -17,7 +17,10 @@ const auth = (req, res, next) => {
 };
 
 const isAdmin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
+  // Check both old and new token structures for compatibility
+  const userRole = req.user?.user?.role || req.user?.role;
+  
+  if (req.user && userRole === 'admin') {
     next();
   } else {
     res.status(403).json({ message: 'Access denied. Admin role required.' });

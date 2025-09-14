@@ -67,6 +67,28 @@ class ApiClient {
     });
   }
 
+  async validateToken() {
+    try {
+      const token = localStorage.getItem('admin_token');
+      if (!token) {
+        return false;
+      }
+      
+      // Try to make a request to a protected endpoint to validate token
+      await this.request('/api/admin/stats');
+      return true;
+    } catch (error) {
+      // Token is invalid, remove it
+      localStorage.removeItem('admin_token');
+      return false;
+    }
+  }
+
+  logout() {
+    localStorage.removeItem('admin_token');
+    window.location.href = '/';
+  }
+
   // Admin endpoints
   async getQueue(status = 'all') {
     return this.request(`/api/admin/queue?status=${status}`);

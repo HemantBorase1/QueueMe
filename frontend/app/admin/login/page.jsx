@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,23 +14,65 @@ export default function AdminLoginPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isValidating, setIsValidating] = useState(true);
   const router = useRouter();
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem("admin_token");
+      if (token) {
+        const isValid = await api.validateToken();
+        if (isValid) {
+          router.push("/admin/dashboard");
+          return;
+        }
+      }
+      setIsValidating(false);
+    };
+    checkAuth();
+  }, [router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
+    // Basic validation
+    if (!credentials.username.trim() || !credentials.password.trim()) {
+      setError("Please enter both username and password");
+      setLoading(false);
+      return;
+    }
+
     try {
       const { token } = await api.adminLogin(credentials);
-      localStorage.setItem("admin_token", token);
-      router.push("/admin/dashboard");
+      
+      if (token) {
+        localStorage.setItem("admin_token", token);
+        // Redirect to dashboard after successful login
+        router.push("/admin/dashboard");
+      } else {
+        setError("Invalid response from server");
+      }
     } catch (err) {
-      setError(err.message);
+      console.error("Login error:", err);
+      setError(err.message || "Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }
   };
+
+  if (isValidating) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/50 p-4 sm:p-6">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Validating authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/50 p-4 sm:p-6">

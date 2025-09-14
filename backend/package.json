@@ -8,7 +8,9 @@
     "dev": "nodemon server.js",
     "seed": "node scripts/seed.js",
     "seed:services": "node -e \"require('./scripts/seed').seedServices().then(() => process.exit(0))\"",
-    "seed:styles": "node -e \"require('./scripts/seed').seedHaircutStyles().then(() => process.exit(0))\""
+    "seed:styles": "node -e \"require('./scripts/seed').seedHaircutStyles().then(() => process.exit(0))\"",
+    "seed:admin": "node -e \"require('./scripts/seed').seedAdminUsers().then(() => process.exit(0))\"",
+    "create-admin": "node scripts/create-admin.js"
   },
   "keywords": [],
   "author": "",

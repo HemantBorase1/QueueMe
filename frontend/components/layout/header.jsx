@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
+import { api } from "@/lib/api";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -29,8 +30,7 @@ const Header = () => {
   const navItems = isAdmin ? adminNavItems : publicNavItems;
 
   const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    window.location.href = '/admin/login';
+    api.logout();
   };
 
   return (
