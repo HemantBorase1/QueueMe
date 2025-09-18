@@ -16,6 +16,7 @@ const auth = (req, res, next) => {
   }
 };
 
+
 const isAdmin = (req, res, next) => {
   // Check both old and new token structures for compatibility
   const userRole = req.user?.user?.role || req.user?.role;

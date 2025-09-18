@@ -71,6 +71,7 @@ router.put('/queue/:id/status', async (req, res) => {
   }
 });
 
+
 // Get statistics
 router.get('/stats', async (req, res) => {
   try {
